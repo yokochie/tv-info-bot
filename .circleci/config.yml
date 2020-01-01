@@ -1,0 +1,56 @@
+version: 2.1
+defaults: &defaults
+  working_directory: ~/project
+  docker:
+    - image: circleci/ruby:2.7-node-browsers
+      environment:
+        TZ: /usr/share/zoneinfo/Asia/Tokyo
+
+references:
+  restore_repo: &restore_repo
+    restore_cache:
+      keys:
+        - v1-repo-{{ .Environment.CIRCLE_SHA1 }}
+
+jobs:
+  dependencies:
+    <<: *defaults
+    steps:
+      - checkout
+      - restore_cache:
+          name: Restore code
+          keys:
+            - cache-{{ .Branch }}-{{ checksum "Gemfile.lock" }}
+      - run:
+          name: Install gems
+          command: |
+            bundle update --bundler
+            bundle config set path 'vendor/bundle'
+            bundle install --jobs=4 --retry=3
+      - save_cache:
+          key: cache-{{ .Branch }}-{{ checksum "Gemfile.lock" }}
+          paths:
+            - ./vendor/bundle
+      - persist_to_workspace:
+          root: ~/project
+          paths:
+            - .
+  test:
+    <<: *defaults
+    steps:
+      - attach_workspace:
+          at: ~/project
+      - run:
+          name: Test
+          command: |
+            TEST_FILES="$(circleci tests glob "tests/**/*.rb" | circleci tests split --split-by=timings)"
+            ruby $TEST_FILES
+
+workflows:
+  version: 2
+  workflows:
+    jobs:
+      - dependencies
+      - test:
+          requires:
+            - dependencies
