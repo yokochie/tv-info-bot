@@ -25,11 +25,11 @@ jobs:
           name: Install gems
           command: |
             bundle update --bundler
-            bundle install --path vendor/bundle
+            bundle install --jobs=4 --retry=3 --path vendor/bundle
       - save_cache:
           key: cache-{{ .Branch }}-{{ checksum "Gemfile.lock" }}
           paths:
-            - vendor/bundle
+            - ./vendor/bundle
       - persist_to_workspace:
           root: ~/project
           paths:
