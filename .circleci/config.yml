@@ -25,7 +25,8 @@ jobs:
           name: Install gems
           command: |
             bundle update --bundler
-            bundle install --jobs=4 --retry=3 --path vendor/bundle
+            bundle config set path 'vendor/bundle'
+            bundle install --jobs=4 --retry=3
       - save_cache:
           key: cache-{{ .Branch }}-{{ checksum "Gemfile.lock" }}
           paths:
