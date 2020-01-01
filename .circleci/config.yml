@@ -16,11 +16,11 @@ jobs:
   dependencies:
     <<: *defaults
     steps:
+      - checkout
       - restore_cache:
           name: Restore code
           keys:
             - cache-{{ .Branch }}-{{ checksum "Gemfile.lock" }}
-      - checkout
       - run:
           name: Install gems
           command: |
